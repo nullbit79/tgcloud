@@ -1,0 +1,29 @@
+name: Build APK (Stable)
+
+on:
+  push:
+    branches: [ "main" ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    # 🔥 Build pakai Docker Buildozer (FIX semua error SDK)
+    - name: Build with Buildozer Docker
+      run: |
+        docker run --rm \
+          -v ${{ github.workspace }}:/home/user/hostcwd \
+          -w /home/user/hostcwd \
+          kivy/buildozer \
+          buildozer android debug
+
+    # 📦 Upload APK
+    - name: Upload APK
+      uses: actions/upload-artifact@v4
+      with:
+        name: tgcloud-apk
+        path: bin/*.apk
