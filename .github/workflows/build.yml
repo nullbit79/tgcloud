@@ -1,0 +1,60 @@
+name: Build APK
+
+on:
+  push:
+    branches: [ "main" ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    env:
+      ANDROID_HOME: /usr/local/lib/android/sdk
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    # 🔥 Setup Android SDK (auto handle license)
+    - name: Setup Android SDK
+      uses: android-actions/setup-android@v3
+
+    # 🔥 Install SDK packages (pakai versi stabil)
+    - name: Install SDK Packages
+      run: |
+        sdkmanager "platform-tools"
+        sdkmanager "platforms;android-30"
+        sdkmanager "build-tools;30.0.3"
+
+    # 🔥 FORCE FIX (trick biar Buildozer tidak pakai 37)
+    - name: Force Build Tools Fix
+      run: |
+        cd $ANDROID_HOME/build-tools
+        ls
+        mv 30.0.3 37.0.0 || true
+
+    # 🔥 Install dependencies
+    - name: Install dependencies
+      run: |
+        sudo apt update
+        sudo apt install -y python3-pip git zip unzip openjdk-17-jdk \
+        autoconf libtool pkg-config zlib1g-dev libncurses5-dev \
+        cmake libffi-dev libssl-dev
+
+    # 🔥 Install Python tools
+    - name: Install Python tools
+      run: |
+        pip install --upgrade pip
+        pip install buildozer cython kivy kivymd telethon
+
+    # 🚀 Build APK
+    - name: Build APK
+      run: |
+        buildozer android debug
+
+    # 📦 Upload APK
+    - name: Upload APK
+      uses: actions/upload-artifact@v4
+      with:
+        name: tgcloud-apk
+        path: bin/*.apk
