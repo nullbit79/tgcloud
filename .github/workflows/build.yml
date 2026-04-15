@@ -1,0 +1,49 @@
+name: Build APK (Final Clean)
+
+on:
+  push:
+    branches: ["main"]
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+
+    steps:
+    - uses: actions/checkout@v4
+
+    # ✅ JAVA 17 (HARUS PALING AWAL)
+    - uses: actions/setup-java@v4
+      with:
+        distribution: 'temurin'
+        java-version: '17'
+
+    # ✅ DEPENDENCY MINIMAL STABIL
+    - name: Install dependencies
+      run: |
+        sudo apt update
+        sudo apt install -y \
+          python3-pip python3-setuptools \
+          git zip unzip \
+          autoconf automake libtool pkg-config \
+          build-essential \
+          zlib1g-dev libncurses5-dev \
+          libffi-dev libssl-dev
+
+    # ✅ INSTALL BUILD TOOL
+    - name: Install Buildozer
+      run: |
+        python3 -m pip install --upgrade pip
+        pip install buildozer cython==0.29.36
+
+    # 🚀 BUILD (biarkan buildozer handle semua)
+    - name: Build APK
+      run: |
+        buildozer android debug
+      env:
+        ANDROID_NDK_HOME: /usr/local/lib/android/sdk/ndk/25.2.9519653
+
+    # 📦 UPLOAD
+    - uses: actions/upload-artifact@v4
+      with:
+        name: tgcloud-apk
+        path: bin/*.apk
